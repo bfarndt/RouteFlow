@@ -1,5 +1,11 @@
 #!/bin/bash
 
+################################################################################
+#                                                                              #
+#                      	    rftest2 modificado                                 #
+#                                                                              #
+################################################################################
+
 if [ "$EUID" != "0" ]; then
   echo "You must be root to run this script."
   exit 1
@@ -56,19 +62,19 @@ reset() {
     ovs-vsctl del-br dp0 &> /dev/null;
     ovs-vsctl emer-reset &> /dev/null;
 
-    echo_bold "-> Stopping and resetting LXC VMs...";
-    for vm in "rfvmA" "rfvmB" "rfvmC" "rfvmD"
-    do
-        lxc-shutdown -n "$vm";
-        while true
-        do
-            if lxc-info -q -n "$vm" | grep -q "STOPPED"; then
-                break;
-            fi
-            echo -n .
-            sleep 1
-        done
-    done
+    #echo_bold "-> Stopping and resetting LXC VMs...";
+    #for vm in "rfvmA" "rfvmB" "rfvmC" "rfvmD"
+    #do
+    #    lxc-shutdown -n "$vm";
+    #    while true
+    #    do
+    #        if lxc-info -q -n "$vm" | grep -q "STOPPED"; then
+    #            break;
+    #        fi
+    #        echo -n .
+    #        sleep 1
+    #    done
+    #done
 
     echo_bold "-> Deleting (previous) run data...";
     mongo db --eval "
@@ -79,10 +85,10 @@ reset() {
         db.getCollection('rfserver<->rfproxy').drop();
     "
         
-    rm -rf /var/lib/lxc/rfvmA/rootfs/opt/rfclient;
-    rm -rf /var/lib/lxc/rfvmB/rootfs/opt/rfclient;
-    rm -rf /var/lib/lxc/rfvmC/rootfs/opt/rfclient;
-    rm -rf /var/lib/lxc/rfvmD/rootfs/opt/rfclient;
+    #rm -rf /var/lib/lxc/rfvmA/rootfs/opt/rfclient;
+    #rm -rf /var/lib/lxc/rfvmB/rootfs/opt/rfclient;
+    #rm -rf /var/lib/lxc/rfvmC/rootfs/opt/rfclient;
+    #rm -rf /var/lib/lxc/rfvmD/rootfs/opt/rfclient;
 }
 reset 1
 trap "reset 0; exit 0" INT
@@ -97,48 +103,53 @@ wait_port_listen $MONGODB_PORT
 
 echo_bold "-> Configuring the virtual machines..."
 # Create the rfclient dir
-mkdir /var/lib/lxc/rfvmA/rootfs/opt/rfclient
-mkdir /var/lib/lxc/rfvmB/rootfs/opt/rfclient
-mkdir /var/lib/lxc/rfvmC/rootfs/opt/rfclient
-mkdir /var/lib/lxc/rfvmD/rootfs/opt/rfclient
+#mkdir /var/lib/lxc/rfvmA/rootfs/opt/rfclient
+#mkdir /var/lib/lxc/rfvmB/rootfs/opt/rfclient
+#mkdir /var/lib/lxc/rfvmC/rootfs/opt/rfclient
+#mkdir /var/lib/lxc/rfvmD/rootfs/opt/rfclient
+
+dir=`pwd`
+cd /home/routeflow/RouteFlow/rftest/
+sh rftest.sh
+cd $dir
 
 # Copy the rfclient executable
-cp build/rfclient /var/lib/lxc/rfvmA/rootfs/opt/rfclient/rfclient
-cp build/rfclient /var/lib/lxc/rfvmB/rootfs/opt/rfclient/rfclient
-cp build/rfclient /var/lib/lxc/rfvmC/rootfs/opt/rfclient/rfclient
-cp build/rfclient /var/lib/lxc/rfvmD/rootfs/opt/rfclient/rfclient
+#cp build/rfclient /var/lib/lxc/rfvmA/rootfs/opt/rfclient/rfclient
+#cp build/rfclient /var/lib/lxc/rfvmB/rootfs/opt/rfclient/rfclient
+#cp build/rfclient /var/lib/lxc/rfvmC/rootfs/opt/rfclient/rfclient
+#cp build/rfclient /var/lib/lxc/rfvmD/rootfs/opt/rfclient/rfclient
 
 # We sleep for a few seconds to wait for the interfaces to go up
-echo "#!/bin/sh" > /var/lib/lxc/rfvmA/rootfs/root/run_rfclient.sh
-echo "sleep 3" >> /var/lib/lxc/rfvmA/rootfs/root/run_rfclient.sh
-echo "/etc/init.d/quagga start" >> /var/lib/lxc/rfvmA/rootfs/root/run_rfclient.sh
-echo "/opt/rfclient/rfclient > /var/log/rfclient.log" >> /var/lib/lxc/rfvmA/rootfs/root/run_rfclient.sh
+#echo "#!/bin/sh" > /var/lib/lxc/rfvmA/rootfs/root/run_rfclient.sh
+#echo "sleep 3" >> /var/lib/lxc/rfvmA/rootfs/root/run_rfclient.sh
+#echo "/etc/init.d/quagga start" >> /var/lib/lxc/rfvmA/rootfs/root/run_rfclient.sh
+#echo "/opt/rfclient/rfclient > /var/log/rfclient.log" >> /var/lib/lxc/rfvmA/rootfs/root/run_rfclient.sh
 
-echo "#!/bin/sh" > /var/lib/lxc/rfvmB/rootfs/root/run_rfclient.sh
-echo "sleep 3" >> /var/lib/lxc/rfvmB/rootfs/root/run_rfclient.sh
-echo "/etc/init.d/quagga start" >> /var/lib/lxc/rfvmB/rootfs/root/run_rfclient.sh
-echo "/opt/rfclient/rfclient > /var/log/rfclient.log" >> /var/lib/lxc/rfvmB/rootfs/root/run_rfclient.sh
+#echo "#!/bin/sh" > /var/lib/lxc/rfvmB/rootfs/root/run_rfclient.sh
+#echo "sleep 3" >> /var/lib/lxc/rfvmB/rootfs/root/run_rfclient.sh
+#echo "/etc/init.d/quagga start" >> /var/lib/lxc/rfvmB/rootfs/root/run_rfclient.sh
+#echo "/opt/rfclient/rfclient > /var/log/rfclient.log" >> /var/lib/lxc/rfvmB/rootfs/root/run_rfclient.sh
 
-echo "#!/bin/sh" > /var/lib/lxc/rfvmC/rootfs/root/run_rfclient.sh
-echo "sleep 3" >> /var/lib/lxc/rfvmC/rootfs/root/run_rfclient.sh
-echo "/etc/init.d/quagga start" >> /var/lib/lxc/rfvmC/rootfs/root/run_rfclient.sh
-echo "/opt/rfclient/rfclient > /var/log/rfclient.log" >> /var/lib/lxc/rfvmC/rootfs/root/run_rfclient.sh
+#echo "#!/bin/sh" > /var/lib/lxc/rfvmC/rootfs/root/run_rfclient.sh
+#echo "sleep 3" >> /var/lib/lxc/rfvmC/rootfs/root/run_rfclient.sh
+#echo "/etc/init.d/quagga start" >> /var/lib/lxc/rfvmC/rootfs/root/run_rfclient.sh
+#echo "/opt/rfclient/rfclient > /var/log/rfclient.log" >> /var/lib/lxc/rfvmC/rootfs/root/run_rfclient.sh
 
-echo "#!/bin/sh" > /var/lib/lxc/rfvmD/rootfs/root/run_rfclient.sh
-echo "sleep 3" >> /var/lib/lxc/rfvmD/rootfs/root/run_rfclient.sh
-echo "/etc/init.d/quagga start" >> /var/lib/lxc/rfvmD/rootfs/root/run_rfclient.sh
-echo "/opt/rfclient/rfclient > /var/log/rfclient.log" >> /var/lib/lxc/rfvmD/rootfs/root/run_rfclient.sh
+#echo "#!/bin/sh" > /var/lib/lxc/rfvmD/rootfs/root/run_rfclient.sh
+#echo "sleep 3" >> /var/lib/lxc/rfvmD/rootfs/root/run_rfclient.sh
+#echo "/etc/init.d/quagga start" >> /var/lib/lxc/rfvmD/rootfs/root/run_rfclient.sh
+#echo "/opt/rfclient/rfclient > /var/log/rfclient.log" >> /var/lib/lxc/rfvmD/rootfs/root/run_rfclient.sh
 
-chmod +x /var/lib/lxc/rfvmA/rootfs/root/run_rfclient.sh
-chmod +x /var/lib/lxc/rfvmB/rootfs/root/run_rfclient.sh
-chmod +x /var/lib/lxc/rfvmC/rootfs/root/run_rfclient.sh
-chmod +x /var/lib/lxc/rfvmD/rootfs/root/run_rfclient.sh
+#chmod +x /var/lib/lxc/rfvmA/rootfs/root/run_rfclient.sh
+#chmod +x /var/lib/lxc/rfvmB/rootfs/root/run_rfclient.sh
+#chmod +x /var/lib/lxc/rfvmC/rootfs/root/run_rfclient.sh
+#chmod +x /var/lib/lxc/rfvmD/rootfs/root/run_rfclient.sh
 
-echo_bold "-> Starting the virtual machines..."
-lxc-start -n rfvmA -d
-lxc-start -n rfvmB -d
-lxc-start -n rfvmC -d
-lxc-start -n rfvmD -d
+#echo_bold "-> Starting the virtual machines..."
+#lxc-start -n rfvmA -d
+#lxc-start -n rfvmB -d
+#lxc-start -n rfvmC -d
+#lxc-start -n rfvmD -d
 
 echo_bold "-> Starting the controller and RFPRoxy..."
 cd pox
